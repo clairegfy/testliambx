@@ -1,0 +1,78 @@
+erDiagram
+    %% ═══════════════════════════════════════════════
+    %%  View 1 — Party & Reporting Group sub-star
+    %% ═══════════════════════════════════════════════
+
+    cdl_f_consolidated_fact {
+        int f_consolidated_fact_id PK
+        int counterparty_d_party_id FK
+        int db_party_d_party_id FK
+        int issuer_d_party_id FK
+        int guarantor_d_party_id FK
+        int parent_d_party_id FK
+        int ult_parent_d_party_id FK
+        int ifrs_parent_d_party_id FK
+        int book_d_party_id FK
+        int issuance_reporting_d_party_id FK
+        int issuance_proc_recv_d_party_id FK
+        int issuance_orig_inv_d_party_id FK
+        string db_party_legal_name
+        string db_party_flag
+    }
+
+    cdl_d_party {
+        int d_party_id PK
+        string party_id
+        string name
+        string incorporated_country_code
+        string incorporated_country_name
+        string da_cpty_class_code
+        string da_cpty_class_name
+        string bail_in_type_code
+        string basel3_cpty_type_code
+        string tsy_issuer_core_rating_code
+        string finrep_sector_cd_cpty_code
+    }
+
+    cdl_d_reporting_grp {
+        int d_reporting_grp_id PK
+        string code
+        string name
+        string reporting_view_code
+        string reporting_view_name
+    }
+
+    cdl_d_party_reporting_grp {
+        int d_party_reporting_grp_id PK
+        int d_reporting_grp_id FK "links to reporting group"
+        int d_party_id FK "links to party"
+        string deleted_by_source_flag
+    }
+
+    cdl_d_party_relationship {
+        int d_party_relationship_id PK
+        int from_d_party_id FK "party A"
+        int to_d_party_id FK "party B"
+        int d_reporting_grp_id FK "scoped to group"
+        string relationship_type_code
+        string relationship_type_name
+        string internal_flag
+    }
+
+    %% Reporting group -> bridge -> party
+    cdl_d_reporting_grp ||--o{ cdl_d_party_reporting_grp : "1 group scopes N party-links"
+    cdl_d_party ||--o{ cdl_d_party_reporting_grp : "1 party in N groups"
+
+    %% Reporting group -> party relationship
+    cdl_d_reporting_grp ||--o{ cdl_d_party_relationship : "qualifies relationships"
+
+    %% Party self-relationship (from / to)
+    cdl_d_party ||--o{ cdl_d_party_relationship : "from_d_party_id"
+    cdl_d_party ||--o{ cdl_d_party_relationship : "to_d_party_id"
+
+    %% Fact -> Party (9+ role-based FK columns)
+    cdl_d_party ||--o{ cdl_f_consolidated_fact : "counterparty"
+    cdl_d_party ||--o{ cdl_f_consolidated_fact : "db_party"
+    cdl_d_party ||--o{ cdl_f_consolidated_fact : "issuer"
+    cdl_d_party ||--o{ cdl_f_consolidated_fact : "guarantor"
+    cdl_d_party ||--o{ cdl_f_consolidated_fact : "parent / ult_parent / ifrs"
